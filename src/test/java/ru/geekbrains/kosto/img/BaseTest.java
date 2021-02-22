@@ -22,6 +22,7 @@ import java.util.Properties;
 
 import static io.restassured.RestAssured.given;
 import static io.restassured.path.json.JsonPath.from;
+import static ru.geekbrains.kosto.Endpoints.POST_IMAGE_REQUEST;
 
 public abstract class BaseTest {
 
@@ -100,10 +101,10 @@ public abstract class BaseTest {
 
     static String uploadImageAndGetJsonWithImageHashAndImageDeleteHash() {
         json = given()
-                .headers("Authorization", token)
+                .spec(reqSpecForAuthorizationWithToken)
                 .body("https://i.imgur.com/n744BL9.png")
                 .when()
-                .post("/image")
+                .post(POST_IMAGE_REQUEST)
                 .then()
                 .statusCode(200)
                 .extract()

@@ -1,6 +1,7 @@
 package ru.geekbrains.kosto.img;
 
 import org.junit.jupiter.api.*;
+import ru.geekbrains.kosto.Images;
 import ru.geekbrains.kosto.pojo.CommonResponse;
 import ru.geekbrains.kosto.pojo.PojoPostUploadImageResponse;
 
@@ -13,6 +14,7 @@ import static org.hamcrest.Matchers.*;
 import static org.hamcrest.Matchers.equalTo;
 import static ru.geekbrains.kosto.Endpoints.DELETE_IMAGE_USERNAME_AND_DELETEHASH_REQUEST;
 import static ru.geekbrains.kosto.Endpoints.POST_IMAGE_REQUEST;
+import static ru.geekbrains.kosto.Images.IMAGE_10MB;
 
 public class UploadImagePositiveTest extends BaseTest {
 
@@ -25,11 +27,11 @@ public class UploadImagePositiveTest extends BaseTest {
 
     @BeforeEach
     void setUp() {
-        byte[] fileContent = getFileContentInBase64("src/test/java/ru/geekbrains/kosto/img/repository/less_10.png");
+        byte[] fileContent = getFileContentInBase64(Images.IMAGE_LESS_10MB.path);
         encodedImageSizeLess10 = Base64.getEncoder().encodeToString(fileContent);
-        fileContent = getFileContentInBase64("src/test/java/ru/geekbrains/kosto/img/repository/10mb.png");
+        fileContent = getFileContentInBase64(IMAGE_10MB.path);
         encodedImageSizeAbout10 = Base64.getEncoder().encodeToString(fileContent);
-        fileContent = getFileContentInBase64("src/test/java/ru/geekbrains/kosto/img/repository/less_1_kb.png");
+        fileContent = getFileContentInBase64(Images.IMAGE_SMALL_SIZE.path);
         encodedImageSizeLess1kb = Base64.getEncoder().encodeToString(fileContent);
 
     }
@@ -132,7 +134,7 @@ public class UploadImagePositiveTest extends BaseTest {
     void uploadFileTestSizeAbout10mbFile() {
         PojoPostUploadImageResponse response = given()
                 .spec(reqSpecForAuthorizationWithToken)
-                .multiPart(multiPartImage, new File("src/test/java/ru/geekbrains/kosto/img/repository/10mb.png"))
+                .multiPart(multiPartImage, new File(IMAGE_10MB.path))
                 .when()
                 .post(POST_IMAGE_REQUEST)
                 .prettyPeek()

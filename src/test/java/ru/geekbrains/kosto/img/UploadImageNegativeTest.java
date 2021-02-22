@@ -6,6 +6,7 @@ import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import ru.geekbrains.kosto.Images;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,7 +25,7 @@ public class UploadImageNegativeTest extends BaseTest {
 
     @BeforeEach
     void setUp() {
-        byte[] fileContent = getFileContentInBase64("src/test/java/ru/geekbrains/kosto/img/repository/more_10.png");
+        byte[] fileContent = getFileContentInBase64(Images.IMAGE_MORE_10MB.path);
         encodedImageSizeOver10 = Base64.getEncoder().encodeToString(fileContent);
     }
 
@@ -84,7 +85,7 @@ public class UploadImageNegativeTest extends BaseTest {
     void uploadFileTestMoreThen10MB() {
         given()
                 .spec(reqSpecForAuthorizationWithToken)
-                .multiPart("image", new File("src/test/java/ru/geekbrains/kosto/img/repository/more_10.png"))
+                .multiPart("image", new File(Images.IMAGE_MORE_10MB.path))
                 .expect()
                 .body("success", is(false))
                 .body("data.error", is("File is over the size limit"))
@@ -100,7 +101,7 @@ public class UploadImageNegativeTest extends BaseTest {
     void uploadFileTestTxt() {
         given()
                 .spec(reqSpecForAuthorizationWithToken)
-                .multiPart("plain", new File("src/test/java/ru/geekbrains/kosto/img/repository/test.txt"))
+                .multiPart("plain", new File(Images.TEXT_FILE.path))
                 .expect()
                 .body("success", is(false))
                 .body("data.error", is("Invalid URL (test)"))//Пытается вытащить URL из файла. Но должно быть что-то типа File type invalid. Но это надо спрашивать у разрабов. Пока такая проверка
