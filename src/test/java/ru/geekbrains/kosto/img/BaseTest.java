@@ -1,8 +1,16 @@
 package ru.geekbrains.kosto.img;
 
 import io.restassured.RestAssured;
+import io.restassured.builder.RequestSpecBuilder;
+import io.restassured.builder.ResponseSpecBuilder;
+import io.restassured.http.ContentType;
+import io.restassured.specification.RequestSpecification;
+import io.restassured.specification.ResponseSpecification;
 import org.apache.commons.io.FileUtils;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeAll;
+import ru.geekbrains.kosto.pojo.CommonResponse;
+import ru.geekbrains.kosto.pojo.PojoPostUploadImageResponse;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -13,6 +21,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import static io.restassured.RestAssured.given;
+import static io.restassured.path.json.JsonPath.from;
 
 public abstract class BaseTest {
 
@@ -26,6 +35,11 @@ public abstract class BaseTest {
 
     protected static Map<String, String> headers = new HashMap<>();
 
+    static ResponseSpecification responseSpecification = null;
+    static ResponseSpecification badResponseSpecification = null;
+    static RequestSpecification reqSpecForAuthorizationWithToken;
+    static RequestSpecification reqSpecForAuthorizationWithClientId;
+
     @BeforeAll
     static void beforeAll() {
         loadProperties();
@@ -36,6 +50,31 @@ public abstract class BaseTest {
         username = prop.getProperty("username");
         clientId = prop.getProperty("clientId");
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
+
+        reqSpecForAuthorizationWithToken = new RequestSpecBuilder()
+                .addHeader("Authorization", token)
+                .setAccept(ContentType.ANY)
+                .build();
+
+        reqSpecForAuthorizationWithClientId = new RequestSpecBuilder()
+                .addHeader("Authorization", clientId)
+                .setAccept(ContentType.ANY)
+                .build();
+
+        responseSpecification = new ResponseSpecBuilder()
+                .expectStatusCode(200)
+                .expectStatusLine("HTTP/1.1 200 OK")
+                .expectContentType(ContentType.JSON)
+                .expectResponseTime(Matchers.lessThan(20000L))
+                .build();
+
+        badResponseSpecification = new ResponseSpecBuilder()
+                .expectStatusCode(400)
+                .expectStatusLine("HTTP/1.1 400 Bad Request")
+                .expectContentType(ContentType.JSON)
+                .expectResponseTime(Matchers.lessThan(20000L))
+                .build();
+
     }
 
     private static void loadProperties() {
@@ -59,7 +98,7 @@ public abstract class BaseTest {
         return fileContent;
     }
 
-    static String uploadImageAndGetJson() {
+    static String uploadImageAndGetJsonWithImageHashAndImageDeleteHash() {
         json = given()
                 .headers("Authorization", token)
                 .body("https://i.imgur.com/n744BL9.png")
@@ -69,6 +108,10 @@ public abstract class BaseTest {
                 .statusCode(200)
                 .extract()
                 .asString();
+
+        imageHash = from(json).get("data.id");
+        imageDeleteHash = from(json).get("data.deletehash");
+
         return json;
     }
 }

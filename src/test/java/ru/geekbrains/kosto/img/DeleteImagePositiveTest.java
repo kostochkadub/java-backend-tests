@@ -5,45 +5,44 @@ import org.junit.jupiter.api.*;
 import static io.restassured.RestAssured.given;
 import static io.restassured.path.json.JsonPath.from;
 import static org.hamcrest.Matchers.is;
+import static ru.geekbrains.kosto.Endpoints.*;
 
 public class DeleteImagePositiveTest extends BaseTest{
 
     @BeforeEach
     void setUp() {
-        uploadImageAndGetJson();
-        imageHash = from(json).get("data.id");
-        imageDeleteHash = from(json).get("data.deletehash");
+        uploadImageAndGetJsonWithImageHashAndImageDeleteHash();
         checkGetImageOk();
     }
 
     @Test
     void imageDeletionAuthed() {
         given()
-                .headers("Authorization", token)
+                .spec(reqSpecForAuthorizationWithToken)
                 .when()
-                .delete("image/{imageHash}",  imageHash)
+                .delete(IMAGE_DELETEHASH_REQUEST,  imageHash)
                 .prettyPeek()
                 .then()
-                .statusCode(200);
+                .spec(responseSpecification);
     }
 
     @Test
     void imageDeletionUnAuthed() {
         given()
-                .headers("Authorization", clientId)
+                .spec(reqSpecForAuthorizationWithClientId)
                 .when()
-                .delete("image/{imageDeleteHash}", imageDeleteHash)
+                .delete(DELETE_IMAGE_IMAGEDELETEHASH_REQUEST, imageDeleteHash)
                 .prettyPeek()
                 .then()
-                .statusCode(200);
+                .spec(responseSpecification);
     }
 
     @AfterEach
     void checkGetDeleteImage() {
         given()
-                .headers("Authorization", token)
+                .spec(reqSpecForAuthorizationWithToken)
                 .when()
-                .get("https://api.imgur.com/3/image/{imageHash}", imageHash)
+                .get(IMAGE_IMAGEHASH_REQUEST, imageHash)
                 .prettyPeek()
                 .then()
                 .statusCode(404);
@@ -51,12 +50,12 @@ public class DeleteImagePositiveTest extends BaseTest{
 
     void checkGetImageOk() {
         given()
-                .headers("Authorization", token)
+                .spec(reqSpecForAuthorizationWithToken)
                 .when()
-                .get("https://api.imgur.com/3/image/{imageHash}", imageHash)
+                .get(IMAGE_IMAGEHASH_REQUEST, imageHash)
                 .prettyPeek()
                 .then()
-                .statusCode(200);
+                .spec(responseSpecification);
     }
 
 }

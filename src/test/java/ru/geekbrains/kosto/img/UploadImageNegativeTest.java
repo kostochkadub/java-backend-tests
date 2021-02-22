@@ -15,6 +15,7 @@ import static io.restassured.RestAssured.given;
 import static io.restassured.config.EncoderConfig.encoderConfig;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static ru.geekbrains.kosto.Endpoints.POST_IMAGE_REQUEST;
 
 public class UploadImageNegativeTest extends BaseTest {
 
@@ -31,23 +32,23 @@ public class UploadImageNegativeTest extends BaseTest {
     @Test
     void uploadFileTestSizeOver10() {
         given()
-                .headers("Authorization", token)
+                .spec(reqSpecForAuthorizationWithToken)
                 .multiPart("image", encodedImageSizeOver10)
                 .expect()
                 .body("success", is(false))
                 .body("data.error", is("File is over the size limit"))
                 .when()
-                .post("/image")
+                .post(POST_IMAGE_REQUEST)
                 .prettyPeek()
                 .then()
-                .statusCode(400);
+                .spec(badResponseSpecification);
     }
 
     @DisplayName("Загрузка невалидного base64")
     @Test
     void uploadNotValidBase64() {
         given()
-                .headers("Authorization", token)
+                .spec(reqSpecForAuthorizationWithToken)
                 .multiPart("image", "R0lGODlhAQABAIAAAAAAAP///yH5B546AEAAAAAНЕВАЛИДLAASDFAAAABAAEAAAIBRAA7SDFGбю")
                 .expect()
                 .body("success", is(false))
@@ -55,26 +56,26 @@ public class UploadImageNegativeTest extends BaseTest {
                 .body("data.error.message", is("File type invalid (2)"))
                 .body("data.error.type", is("ImgurException"))
                 .when()
-                .post("/image")
+                .post(POST_IMAGE_REQUEST)
                 .prettyPeek()
                 .then()
-                .statusCode(400);
+                .spec(badResponseSpecification);
     }
 
     @DisplayName("Загрузка картинки размером больше 10mb через URL")
     @Test
     void uploadFileTestSizeOver10URL() {
         given()
-                .headers("Authorization", token)
+                .spec(reqSpecForAuthorizationWithToken)
                 .body("http://img.lenagold.ru/tc/tcvet/roz/roz_tcvet210.png")
                 .expect()
                 .body("success", is(false))
                 .body("data.error", is("File is over the size limit"))
                 .when()
-                .post("/image")
+                .post(POST_IMAGE_REQUEST)
                 .prettyPeek()
                 .then()
-                .statusCode(400);
+                .spec(badResponseSpecification);
     }
 
 
@@ -82,29 +83,29 @@ public class UploadImageNegativeTest extends BaseTest {
     @Test
     void uploadFileTestMoreThen10MB() {
         given()
-                .headers("Authorization", token)
+                .spec(reqSpecForAuthorizationWithToken)
                 .multiPart("image", new File("src/test/java/ru/geekbrains/kosto/img/repository/more_10.png"))
                 .expect()
                 .body("success", is(false))
                 .body("data.error", is("File is over the size limit"))
                 .when()
-                .post("/image")
+                .post(POST_IMAGE_REQUEST)
                 .prettyPeek()
                 .then()
-                .statusCode(400);
+                .spec(badResponseSpecification);
     }
 
     @DisplayName("Загрузка .txt")
     @Test
     void uploadFileTestTxt() {
         given()
-                .headers("Authorization", token)
+                .spec(reqSpecForAuthorizationWithToken)
                 .multiPart("plain", new File("src/test/java/ru/geekbrains/kosto/img/repository/test.txt"))
                 .expect()
                 .body("success", is(false))
                 .body("data.error", is("Invalid URL (test)"))//Пытается вытащить URL из файла. Но должно быть что-то типа File type invalid. Но это надо спрашивать у разрабов. Пока такая проверка
                 .when()
-                .post("/image")
+                .post(POST_IMAGE_REQUEST)
                 .prettyPeek()
                 .then()
                 .statusCode(400);

@@ -1,68 +1,82 @@
 package ru.geekbrains.kosto.img;
 
 import org.junit.jupiter.api.*;
+import ru.geekbrains.kosto.pojo.CommonResponse;
+import ru.geekbrains.kosto.pojo.PojoGetImageResponse;
 
 import static io.restassured.RestAssured.given;
 import static io.restassured.path.json.JsonPath.from;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
+import static ru.geekbrains.kosto.Endpoints.*;
 
 public class FavoriteAnImageTest extends BaseTest{
 
     @BeforeAll
     static void setUp() {
-        uploadImageAndGetJson();
-        imageHash = from(json).get("data.id");
-        imageDeleteHash = from(json).get("data.deletehash");
+        uploadImageAndGetJsonWithImageHashAndImageDeleteHash();
         checkFavoritedIsUnfavorited();
     }
 
     @Test
     void updateFavorite() {
-        given()
-                .headers("Authorization", token)
-                .expect()
-                .body("data", is("favorited"))
+        CommonResponse response = given()
+                .spec(reqSpecForAuthorizationWithToken)
                 .when()
-                .post("https://api.imgur.com/3/image/{imageHash}/favorite", imageHash)
+                .post(POST_IMAGE_IMAGEHASH_FAVORITE_REQUEST, imageHash)
                 .prettyPeek()
                 .then()
-                .statusCode(200);
+                .spec(responseSpecification)
+                .extract()
+                .body()
+                .as(CommonResponse.class);
+
+        assertThat(response.getData(), is("favorited"));
+        assertThat(response.getSuccess(), is(true));
+        assertThat(response.getStatus(), is(200));
     }
 
     @AfterAll
     static void checkAndTearDown() {
         checkFavoritedIsFavorited();
         given()
-                .headers("Authorization", token)
+                .spec(reqSpecForAuthorizationWithToken)
                 .when()
-                .delete("account/{username}/image/{imageDeleteHash}", username, imageDeleteHash)
+                .delete(DELETE_IMAGE_USERNAME_AND_DELETEHASH_REQUEST, username, imageDeleteHash)
                 .prettyPeek()
                 .then()
-                .statusCode(200);
+                .spec(responseSpecification);
     }
 
     static void checkFavoritedIsUnfavorited() {
-        given()
-                .headers("Authorization", token)
-                .expect()
-                .body("data.favorite", is(false))
+        PojoGetImageResponse response = given()
+                .spec(reqSpecForAuthorizationWithToken)
                 .when()
-                .get("https://api.imgur.com/3/image/{imageHash}", imageHash)
+                .get(IMAGE_IMAGEHASH_REQUEST, imageHash)
                 .prettyPeek()
                 .then()
-                .statusCode(200);
+                .spec(responseSpecification)
+                .extract()
+                .body()
+                .as(PojoGetImageResponse.class);
+
+        assertThat(response.getData().getFavorite(), is(false));
     }
 
     static void checkFavoritedIsFavorited() {
-        given()
-                .headers("Authorization", token)
-                .expect()
-                .body("data.favorite", is(true))
+        PojoGetImageResponse response = given()
+                .spec(reqSpecForAuthorizationWithToken)
                 .when()
-                .get("https://api.imgur.com/3/image/{imageHash}", imageHash)
+                .get(IMAGE_IMAGEHASH_REQUEST, imageHash)
                 .prettyPeek()
                 .then()
-                .statusCode(200);
+                .spec(responseSpecification)
+                .extract()
+                .body()
+                .as(PojoGetImageResponse.class);
+
+        assertThat(response.getData().getFavorite(), is(true));
     }
 
 
